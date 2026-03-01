@@ -20,15 +20,24 @@
         
         // CONFIGURAÇÃO DO FIREBASE
         // IMPORTANTE: Substitua com suas credenciais
-     const firebaseConfig = {
-    apiKey: "SUA_API_KEY_AQUI",
-    authDomain: "seu-projeto.firebaseapp.com",
-    databaseURL: "https://seu-projeto.firebaseio.com",
-    projectId: "seu-projeto-id",
-    storageBucket: "seu-projeto.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "seu-app-id"
+   // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDVnOlX8OMKFAu2XF0exF-0_btN-7hHTBQ",
+  authDomain: "meu-organizador-diario.firebaseapp.com",
+  databaseURL: "https://meu-organizador-diario-default-rtdb.firebaseio.com",
+  projectId: "meu-organizador-diario",
+  storageBucket: "meu-organizador-diario.firebasestorage.app",
+  messagingSenderId: "107242198508",
+  appId: "1:107242198508:web:0f4dcb4f286afe07589cc9"
 };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 
         const firebaseEnabled = firebaseConfig.apiKey !== "SUA_API_KEY_AQUI";
         let app, auth, db;
@@ -415,4 +424,5 @@
     </div>
 </body>
 </html>
+
 
