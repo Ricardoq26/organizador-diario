@@ -18,35 +18,21 @@
         import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
         import { getDatabase, ref, set, onValue, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
         
-        // CONFIGURAÇÃO DO FIREBASE
-        // IMPORTANTE: Substitua com suas credenciais
-   // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+        // CONFIGURAÇÃO DO FIREBASE - SUAS CREDENCIAIS
+        const firebaseConfig = {
+            apiKey: "AIzaSyDVnOlX8OMKFAu2XF0exF-0_btN-7hHTBQ",
+            authDomain: "meu-organizador-diario.firebaseapp.com",
+            databaseURL: "https://meu-organizador-diario-default-rtdb.firebaseio.com",
+            projectId: "meu-organizador-diario",
+            storageBucket: "meu-organizador-diario.firebasestorage.app",
+            messagingSenderId: "107242198508",
+            appId: "1:107242198508:web:0f4dcb4f286afe07589cc9"
+        };
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDVnOlX8OMKFAu2XF0exF-0_btN-7hHTBQ",
-  authDomain: "meu-organizador-diario.firebaseapp.com",
-  databaseURL: "https://meu-organizador-diario-default-rtdb.firebaseio.com",
-  projectId: "meu-organizador-diario",
-  storageBucket: "meu-organizador-diario.firebasestorage.app",
-  messagingSenderId: "107242198508",
-  appId: "1:107242198508:web:0f4dcb4f286afe07589cc9"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-
-        const firebaseEnabled = firebaseConfig.apiKey !== "SUA_API_KEY_AQUI";
-        let app, auth, db;
-
-        if (firebaseEnabled) {
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getDatabase(app);
-        }
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
 
         // Estado global
         let currentUser = null;
@@ -68,7 +54,7 @@ const app = initializeApp(firebaseConfig);
         function saveTasks(newTasks) {
             tasks = newTasks;
             saveToLocal('tasks', tasks);
-            if (firebaseEnabled && currentUser) {
+            if (currentUser) {
                 tasks.forEach(task => {
                     set(ref(db, `users/${currentUser.uid}/tasks/${task.id}`), task);
                 });
@@ -80,7 +66,7 @@ const app = initializeApp(firebaseConfig);
         function saveGoals(newGoals) {
             goals = newGoals;
             saveToLocal('goals', goals);
-            if (firebaseEnabled && currentUser) {
+            if (currentUser) {
                 goals.forEach(goal => {
                     set(ref(db, `users/${currentUser.uid}/goals/${goal.id}`), goal);
                 });
@@ -90,29 +76,20 @@ const app = initializeApp(firebaseConfig);
 
         // Login com Google
         async function loginWithGoogle() {
-            if (!firebaseEnabled) {
-                alert('Firebase não configurado. Usando modo local.');
-                currentUser = { displayName: 'Usuário Local', email: 'local@example.com' };
-                renderApp();
-                return;
-            }
             try {
                 const provider = new GoogleAuthProvider();
                 const result = await signInWithPopup(auth, provider);
                 currentUser = result.user;
             } catch (error) {
                 console.error('Erro no login:', error);
-                alert('Erro ao fazer login. Usando modo local.');
-                currentUser = { displayName: 'Usuário Local', email: 'local@example.com' };
+                alert('Erro ao fazer login: ' + error.message);
             }
             renderApp();
         }
 
         // Logout
         async function doLogout() {
-            if (firebaseEnabled && auth) {
-                await signOut(auth);
-            }
+            await signOut(auth);
             currentUser = null;
             tasks = [];
             goals = [];
@@ -176,7 +153,7 @@ const app = initializeApp(firebaseConfig);
         function deleteTask(id) {
             if (confirm('Deseja realmente excluir esta tarefa?')) {
                 saveTasks(tasks.filter(t => t.id !== id));
-                if (firebaseEnabled && currentUser) {
+                if (currentUser) {
                     remove(ref(db, `users/${currentUser.uid}/tasks/${id}`));
                 }
             }
@@ -186,7 +163,7 @@ const app = initializeApp(firebaseConfig);
         function deleteGoal(id) {
             if (confirm('Deseja realmente excluir esta meta?')) {
                 saveGoals(goals.filter(g => g.id !== id));
-                if (firebaseEnabled && currentUser) {
+                if (currentUser) {
                     remove(ref(db, `users/${currentUser.uid}/goals/${id}`));
                 }
             }
@@ -204,9 +181,9 @@ const app = initializeApp(firebaseConfig);
                             <h1 class="text-3xl font-bold text-gray-800 mb-2">Organizador Diário</h1>
                             <p class="text-gray-600 mb-8">Gerencie suas tarefas e metas</p>
                             <button onclick="window.loginWithGoogle()" class="w-full bg-blue-600 text-white py-4 px-6 rounded-xl font-semibold hover:bg-blue-700 transition">
-                                ${firebaseEnabled ? '🔐 Entrar com Google' : '📝 Usar Modo Local'}
+                                🔐 Entrar com Google
                             </button>
-                            ${!firebaseEnabled ? '<p class="text-xs text-orange-600 mt-4">⚠️ Configure Firebase para sincronização</p>' : ''}
+                            <p class="text-xs text-green-600 mt-4">✅ Firebase Configurado!</p>
                         </div>
                     </div>
                 `;
@@ -385,32 +362,28 @@ const app = initializeApp(firebaseConfig);
         window.deleteTask = deleteTask;
         window.deleteGoal = deleteGoal;
 
-        // Inicializar
-        if (firebaseEnabled) {
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    currentUser = user;
-                    // Carregar dados do Firebase
-                    onValue(ref(db, `users/${user.uid}/tasks`), (snapshot) => {
-                        const data = snapshot.val();
-                        if (data) tasks = Object.values(data);
-                        renderApp();
-                    });
-                    onValue(ref(db, `users/${user.uid}/goals`), (snapshot) => {
-                        const data = snapshot.val();
-                        if (data) goals = Object.values(data);
-                        renderApp();
-                    });
-                } else {
-                    currentUser = null;
+        // Inicializar - monitorar autenticação
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                // Carregar dados do Firebase
+                onValue(ref(db, `users/${user.uid}/tasks`), (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) tasks = Object.values(data);
                     renderApp();
-                }
-            });
-        } else {
-            tasks = loadFromLocal('tasks');
-            goals = loadFromLocal('goals');
-            renderApp();
-        }
+                });
+                onValue(ref(db, `users/${user.uid}/goals`), (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) goals = Object.values(data);
+                    renderApp();
+                });
+            } else {
+                currentUser = null;
+                tasks = loadFromLocal('tasks');
+                goals = loadFromLocal('goals');
+                renderApp();
+            }
+        });
     </script>
 </head>
 <body>
@@ -424,5 +397,3 @@ const app = initializeApp(firebaseConfig);
     </div>
 </body>
 </html>
-
-
